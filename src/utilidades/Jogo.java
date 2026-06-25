@@ -7,8 +7,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.HashMap;
-import java.util.Map;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
@@ -193,7 +191,7 @@ public class Jogo {
         this.mostrarTelaTurnoPadrao(mensagemTurnoAtual);
         return this.logger.lerOpcaoTurnoPadrao();
     }
-    
+
     private String processarCura() {
         String mensagem;
         
@@ -511,16 +509,14 @@ public class Jogo {
         
         this.mapa = new Mapa(mapaVisual, mapaEntidade, posicaoJogador);
     }
-
-    /* -------------------------- Metodos publicos -------------------------- */
     
-    public void rodar() throws IOException {
+    private void lerTelaMenu() throws IOException {
         boolean existeJogoSalvo = this.save.getPossuiConteudo();
         char opcaoMenuPrincipal = this.logger.lerOpcaoMenuPrincipal(existeJogoSalvo);
         
         if ((existeJogoSalvo && opcaoMenuPrincipal == '3') || (!existeJogoSalvo && opcaoMenuPrincipal == '2')) {
             this.logger.mostrarMensagem(Logger.mensagemSairDoJogo);
-            return;
+            System.exit(0);
         }
         
         if (opcaoMenuPrincipal == '1') {
@@ -529,10 +525,16 @@ public class Jogo {
         else {
             this.criarJogoSalvo();
         }
-        
+    }
+
+    /* -------------------------- Metodos publicos -------------------------- */
+    
+    public void rodar() throws IOException {
+        this.lerTelaMenu();
+
         String mensagemTurnoAtual = "";
         
-        while (true) {            
+        while (true) {
             char opcao = this.lerTurnoPadrao(mensagemTurnoAtual);
             boolean continuarCiclo = true;
             boolean fezMovimento = false;
@@ -571,20 +573,7 @@ public class Jogo {
             
             if (!continuarCiclo) {
                 this.mostrarTelaTurnoPadrao(mensagemTurnoAtual);
-                existeJogoSalvo = this.save.getPossuiConteudo();
-                opcaoMenuPrincipal = this.logger.lerOpcaoMenuPrincipal(existeJogoSalvo);
-
-                if ((existeJogoSalvo && opcaoMenuPrincipal == '3') || (!existeJogoSalvo && opcaoMenuPrincipal == '2')) {
-                    this.logger.mostrarMensagem(Logger.mensagemSairDoJogo);
-                    System.exit(0);
-                }
-
-                if (opcaoMenuPrincipal == '1') {
-                    this.criarNovoJogo();
-                }
-                else {
-                    this.criarJogoSalvo();
-                }
+                this.lerTelaMenu();
                 
                 mensagemTurnoAtual = "";
             }
