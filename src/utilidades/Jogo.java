@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.Map;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
@@ -131,6 +132,8 @@ public class Jogo {
             numeroTrexes
         };
         
+        int ponteiroInimigos = 0;
+        
         for (int i = 0; i < 4; i++) {
             for (; numeroDinossauros[i] > 0; numeroDinossauros[i]--) {
                 Coordenada coordenadaAtual = listaDeCoordenadas.get(ponteiroListaDeCoordenadas++);
@@ -140,6 +143,9 @@ public class Jogo {
                     danoPorAtaqueDinossauros[i]
                 );
                 this.mapa.adicionarEntidade(coordenadaAtual, dinossauro);
+                this.mapa.getListaInimigos().put(ponteiroInimigos, dinossauro);
+                this.mapa.getListaPosicaoInimigos().put(ponteiroInimigos, coordenadaAtual);
+                ponteiroInimigos++;
             }
         }
         
@@ -290,7 +296,7 @@ public class Jogo {
                     
                     final int resultadoDado = this.sorteador.rolarDado(6);
                     
-                    if (!this.jogador.getPossuiBastao() && resultadoDado < 6) {
+                    if (tipoInimigo == Dinossauro.padraoRepresentacaoTroodonte && !this.jogador.getPossuiBastao() && resultadoDado < 6) {
                         this.logger.mostrarMensagem("O Troodonte so recebe ataques de maos livres se estes forem criticos.");
                         break;
                     }         
@@ -354,6 +360,22 @@ public class Jogo {
             
             if (inimigo.getVidaAtual() == 0) {
                 this.mapa.movimentarJogador();
+                
+                int idInimigo = -1;
+                
+                for (Map.Entry<Integer, Dinossauro> par : this.mapa.getListaInimigos().entrySet()) {
+                    Integer id = par.getKey();
+                    Dinossauro inimigoAtual = par.getValue();
+                    
+                    if (inimigo == inimigoAtual) {
+                        idInimigo = id;
+                        this.mapa.getListaInimigos().remove(idInimigo);
+                        break;
+                    }
+                }
+                
+                this.mapa.getListaPosicaoInimigos().remove(idInimigo);
+                
                 return String.format("Voce derrotou o %s!", nomeInimigo);
             }
             
@@ -391,6 +413,91 @@ public class Jogo {
         }
         
         return mensagem;
+    }
+    
+    private void movimentarInimigos() {
+        Map<Integer, Dinossauro> listaInimigos = this.mapa.getListaInimigos();
+        Map<Integer, Coordenada> listaPosicaoInimigos = this.mapa.getListaPosicaoInimigos();
+        Dinossauro inimigo = null;
+        Coordenada posicaoInimigo = null;
+        
+        for (Map.Entry<Integer, Dinossauro> par : listaInimigos.entrySet()) {
+            Integer id = par.getKey();
+            Dinossauro inimigoAtual = par.getValue();
+            Coordenada posicaoInimigoAtual = listaPosicaoInimigos.get(id);
+            int x = posicaoInimigoAtual.getX();
+            int y = posicaoInimigoAtual.getY();
+            int novoX = x;
+            int novoY = y;
+            
+            if (inimigoAtual.getRepresentacaoVisual() == Dinossauro.padraoRepresentacaoTrex) {
+                continue;
+            }
+                  
+            int direcao = this.sorteador.rolarDado(4);
+            
+            switch (direcao) {
+                case 1 -> novoY--;
+                case 2 -> novoX++;
+                case 3 -> novoY++;
+                case 4 -> novoX--;
+            }
+            
+            if (Math.min(novoX, novoY) < 0 || Math.max(novoX, novoY) == Mapa.padraoMedida || (this.mapa.getVersaoVisual()[novoY][novoX] != Jogador.padraoRepresentacao && this.mapa.getVersaoVisual()[novoY][novoX] != Entidade.padraoRepresentacaoEspacoVazio)) {
+                continue;
+            }
+            
+            if (inimigo == null && this.mapa.getVersaoVisual()[novoY][novoX] == Jogador.padraoRepresentacao) {
+                inimigo = inimigoAtual;
+                posicaoInimigo = new Coordenada(x, y);
+                continue;
+            }
+            
+            posicaoInimigoAtual.setX(novoX);
+            posicaoInimigoAtual.setY(novoY);
+            this.mapa.adicionarEntidade(posicaoInimigoAtual, inimigoAtual);
+            this.mapa.removerEntidade(new Coordenada(x, y));
+            listaPosicaoInimigos.put(id, posicaoInimigoAtual);
+            
+            if (inimigoAtual.getRepresentacaoVisual() != Dinossauro.padraoRepresentacaoVelociraptor) {
+                continue;
+            }
+            
+            x = novoX;
+            y = novoY;
+            
+            direcao = this.sorteador.rolarDado(4);
+            
+            switch (direcao) {
+                case 1 -> novoY--;
+                case 2 -> novoX++;
+                case 3 -> novoY++;
+                case 4 -> novoX--;
+            }
+            
+            if (Math.min(novoX, novoY) < 0 || Math.max(novoX, novoY) == Mapa.padraoMedida || (this.mapa.getVersaoVisual()[novoY][novoX] != Jogador.padraoRepresentacao && this.mapa.getVersaoVisual()[novoY][novoX] != Entidade.padraoRepresentacaoEspacoVazio)) {
+                continue;
+            }
+            
+            if (inimigo == null && this.mapa.getVersaoVisual()[novoY][novoX] == Jogador.padraoRepresentacao) {
+                inimigo = inimigoAtual;
+                posicaoInimigo = new Coordenada(x, y);
+                continue;
+            }
+            
+            posicaoInimigoAtual.setX(novoX);
+            posicaoInimigoAtual.setY(novoY);
+            this.mapa.adicionarEntidade(posicaoInimigoAtual, inimigoAtual);
+            this.mapa.removerEntidade(new Coordenada(x, y));
+            listaPosicaoInimigos.put(id, posicaoInimigoAtual);
+        }
+        
+        if (inimigo == null) {
+            return;
+        }
+        
+        this.mapa.setPosicaoNova(posicaoInimigo);
+        this.processarCombate(inimigo.getRepresentacaoVisual());
     }
     
     private void salvarJogo() throws IOException {
@@ -535,11 +642,21 @@ public class Jogo {
         String mensagemTurnoAtual = "";
         
         while (true) {
-            char opcao = this.lerTurnoPadrao(mensagemTurnoAtual);
             boolean continuarCiclo = true;
             boolean fezMovimento = false;
             boolean fezMovimentoInvalido = false;
-            mensagemTurnoAtual = "";
+            
+            this.movimentarInimigos();
+            continuarCiclo = this.jogador.estaVivo();
+            
+            if (!continuarCiclo) {
+                this.mostrarTelaTurnoPadrao(mensagemTurnoAtual);
+                this.lerTelaMenu();
+                
+                mensagemTurnoAtual = "";
+            }
+            
+            char opcao = this.lerTurnoPadrao(mensagemTurnoAtual);
 
             switch (opcao) {
                 case 'c' -> {

@@ -1,11 +1,16 @@
 package utilidades;
 import entidades.Entidade;
 import entidades.Jogador;
+import entidades.Dinossauro;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Mapa {
     private boolean modoDebug;
     private char[][] versaoVisual;
     private Entidade[][] versaoEntidade;
+    private Map<Integer, Dinossauro> listaInimigos;
+    private Map<Integer, Coordenada> listaPosicaoInimigos;
     private Coordenada posicaoJogador;
     private Coordenada posicaoNova;
     public static final char padraoRepresentacaoNevoa = '*';
@@ -15,6 +20,8 @@ public class Mapa {
         this.modoDebug = false;
         this.versaoVisual = new char[Mapa.padraoMedida][Mapa.padraoMedida];
         this.versaoEntidade = new Entidade[Mapa.padraoMedida][Mapa.padraoMedida];
+        this.listaInimigos = new HashMap<>();
+        this.listaPosicaoInimigos = new HashMap<>();
     }
     
     public Mapa(char[][] versaoVisual, Entidade[][] versaoEntidade, Coordenada posicaoJogador) {
@@ -22,6 +29,21 @@ public class Mapa {
         this.versaoVisual = versaoVisual;
         this.versaoEntidade = versaoEntidade;
         this.posicaoJogador = posicaoJogador;
+        
+        this.listaInimigos = new HashMap<>();
+        this.listaPosicaoInimigos = new HashMap<>();
+        
+        int ponteiroInimigo = 0;
+        
+        for (int y = 0; y < Mapa.padraoMedida; y++) {
+            for (int x = 0; x < Mapa.padraoMedida; x++) {
+                if (versaoEntidade[y][x] instanceof Dinossauro) {
+                    this.listaInimigos.put(ponteiroInimigo, (Dinossauro) versaoEntidade[y][x]);
+                    this.listaPosicaoInimigos.put(ponteiroInimigo, new Coordenada(x, y));
+                    ponteiroInimigo++;
+                }
+            }
+        }
     }
     
     /* ------------------------- Getters e setters ------------------------- */
@@ -36,6 +58,14 @@ public class Mapa {
     
     public Entidade[][] getVersaoEntidade() {
         return this.versaoEntidade;
+    }
+    
+    public Map<Integer, Dinossauro> getListaInimigos() {
+        return this.listaInimigos;
+    }
+    
+    public Map<Integer, Coordenada> getListaPosicaoInimigos() {
+        return this.listaPosicaoInimigos;
     }
     
     public Coordenada getPosicaoJogador() {
@@ -56,6 +86,14 @@ public class Mapa {
     
     public void setVersaoEntidade(Entidade[][] versaoEntidade) {
         this.versaoEntidade = versaoEntidade;
+    }
+    
+    public void setListaInimigos(Map<Integer, Dinossauro> listaInimigos) {
+        this.listaInimigos = listaInimigos;
+    }
+    
+    public void setListaPosicaoInimigos(Map<Integer, Coordenada> listaPosicaoInimigos) {
+        this.listaPosicaoInimigos = listaPosicaoInimigos;
     }
     
     public void setPosicaoJogador(Coordenada posicaoJogador) {
